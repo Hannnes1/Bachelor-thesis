@@ -1,26 +1,32 @@
 % CREATED BY MAGNUS GUSTAVER, 2020
 \chapter{Introduction}
-This chapter presents the section levels that can be used in the template. 
 
-\section{Section levels}
-The following table presents an overview of the section levels that are used in this document. The number of levels that are numbered and included in the table of contents is set in the settings file \texttt{Settings.tex}. The levels are shown in Section \ref{Section_ref}.
+This introductory section presents the background and current state of the Autobike project. The different aims of the given assignment is also described, together with its limitations and boundaries. Finally the specific issues which this report investigates are also listed and presented; these issues are derived from the aim of the assignment.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{ll} \hline\hline
-Name & Command\\ \hline
-Chapter & \textbackslash\texttt{chapter\{\emph{Chapter name}\}}\\
-Section & \textbackslash\texttt{section\{\emph{Section name}\}}\\
-Subsection & \textbackslash\texttt{subsection\{\emph{Subsection name}\}}\\
-Subsubsection & \textbackslash\texttt{subsubsection\{\emph{Subsubsection name}\}}\\
-Paragraph & \textbackslash\texttt{paragraph\{\emph{Paragraph name}\}}\\
-Subparagraph & \textbackslash\texttt{paragraph\{\emph{Subparagraph name}\}}\\ \hline\hline
-\end{tabular}
-\end{table}
+\section{Background}
 
-\section{Section} \label{Section_ref}
-\subsection{Subsection}
-\subsubsection{Subsubsection}
-\paragraph{Paragraph}
-\subparagraph{Subparagraph}
+The Autobike project was started at Chalmers in 2017 with the goal of creating a self driving bike, which could be used to test the safety systems in cars. The bike needed to resemble a normal bike to the greatest extent possible, while also being able to balance on its own and follow a predetermined path. Two versions of the bike has been created at Chalmers, the black bike and red bike. The red bike was improved upon by students at Mälardalen University (MDU) during 2021; it is this version of the bike which is in need of further development from this project.
+
+The previous work focused mostly on the hardware of the bike, as well as parts of the software made using the graphical programming language LabVIEW \cite{NationalInstruments2022WhatLabVIEW}. The main purpose of the LabVIEW code is to communicate with the sensors and I/O on the MyRIO-1900 \cite{NationalInstruments2022MyRIO-1900} that controls the bike. The main components which are yet to be completed on this version of the bike are the control algorithm for the two motors of the bike, as well as the code for communication with the so called "forward motor", which drives the bike.
+
+The other version of the bike that was created at Chalmers, the black bike, is programmed in Python. This version has an algorithm for balancing the bike while it is moving forward. It is this algorithm which is supposed to be used in the red bike, but since LabVIEW and the MyRIO-1900 does not support Python, the algorithm must be converted into C.
+
+\section{Aim}
+
+The aim of the assignment is completing the software for the Autobike that was worked on by the students at MDU. The main focus is the implementation of control algorithms written for the other version of the project. These algorithms must be changed and adapted to function together with the hardware and software used by the current iteration of the bike. The desired result of implementing the control algorithms is that the control signals for the two motors can be calculated, based on the signals from the bike's sensors.
+
+Another aim is programming the software needed to communicate with the bike's forward motor. Achieving this aim will result in the speed of the motor being able to be controlled from the bike's microcontroller.
+
+The intended result of completing the goals presented above, is the speed of the bike's motors being able to be controlled based on the bike's sensors and control algorithm. This should result in the bike should be able to balance autonomously while maintaining a forward velocity.
+
+The assignment also has the secondary aim of improving the safety and user experience of the Autobike. To achieve improved safety, the completed code should guarantee that the bike is controlled within the desired safety limits. The preexisting software should also be modified so that the user controls becomes more intuitive, and therefore improving the user experience when testing the bike.
+
+\section{Limitations}
+
+The main limitation in this assignment is that the only part of the Autobike that will be changed in is the software; the hardware will be left in its current state. Additionally, code that enables the bike to follow a predetermined path will not be written.
+
+\section{Specification of Issue Under Investigation}
+
+Based on the aim of the assignment, three questions are derived which this report is going to answer. These questions are:This chapter presents the section levels that can be used in the template.
+
 

@@ -1,3 +1,45 @@
 % CREATED BY MAGNUS GUSTAVER, 2020
-\chapter{Methods}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\chapter{Methodology}
+
+To fulfill the project's aim and reach the desired results, there are four main parts which needs to be completed. The controller software used calculate and send control signals to the two motors of the bike, has to be adapted and implemented for the current version of the Autobike. The safety of this software has to be improved, meaning limitations to the bike's behavior has to be implemented. The software to communicate with, and control the forward motor also has to be written from scratch, since this is something which has previously not been created. Previous work had already been done to be able to control the steering motor manually, this by changing its speed of rotation; therefore software must be implemented with the purpose of controlling this motor, based on the sensors fitted to the Autobike.
+
+After each of these parts of the Autobike's software is implemented, this part should be tested with the bike, this to identify and fix any problems. The rest of the software should then be tested together with the new features to ensure that no part has stopped working.
+
+The following subsections further describes the methodology for reaching specific goals of the project.
+
+\section{Examining Previous Work}
+
+Since this is a recurring project with different groups developing different parts of the system, previous work has to be examined before any part of the software can be created or modified. In this case the previous work refers to the already existing software written for the current iteration of the Autobike. This software has to be examined and tested so that it can be fully understood. After this examination, it is possible to identify which parts has to be further developed, and what has not been done at all.
+
+\section{Configuring the toolchain and compiling C for MyRIO}
+\label{toolchain}
+
+To be able to develop programs for MyRIO using LabVIEW, software from National Instruments has to be installed. This includes LabVIEW itself, as well as software that makes it possible to configure the MyRIO and upload programs to the device. Because of the large amount of programs that are needed, and their deep integration with Windows, the installation process will take more time than what is usual. Additional software will also have to be installed and configured to make it possible to develop and compile C programs specifically for the ARM architecture used by MyRIO.
+
+As previously mentioned, algorithms written in C must be integrated into LabVIEW and run on the MyRIO. To achieve this the \textit{Call Library Function Node} in LabVIEW can be utilized, which can run code written in text-based programming languages. This code must first be compiled for ARMv7 Linux, which can then be used to build a Linux shared library (.so) file. The created file will then need to be transferred to the MyRIO device from where it was created using for example FTP (File Transfer Protocol), before it can be called from within the LabVIEW program.
+
+\section{Converting the Control Algorithm from Python to C}
+\label{convertingPython}
+
+Since the control algorithm for the black bike is written in Python, it has to be converted to C before it can work with LabVIEW. First the parts of the code which are needed for the red bike must be identified. Meaning the controller code which calculates the control signals for the two motors, based on the bike's sensor values. The identified code can then be converted to C either using automated tools, or by manually rewriting it. Based on the previous work that has been done on the bike, the second alternative seems to be the best one. During the conversion of the code, it should also be restructured in such a way that it has a public interface that can be accessed from LabVIEW. A shared library can then be created by following the steps in section \ref{toolchain}.
+
+\section{Automating the Steering Motor Control}
+\label{steeringMotor}
+
+Code for communicating with the steering motor by using a manual slider has already been implemented in LabVIEW. The slider changes the signal sent to the motor using pulse-width modulation, or PWM; therefore changing the speed and rotational direction of the motor. To reach the goal of a self driving bike, the slider should be replaced with an output from the control algorithm that has been created as described in section \ref{convertingPython}. 
+
+It should be verified that the output from the algorithm is of the same unit that is expected by the motor input, before proceeding with testing. If this is not the case, the output signal should be converted to the correct unit.
+
+\section{Forward Motor}
+
+During previous work that has been made on the Autobike, no code has been written to control the forward motor; this code must therefore be created. The code is designed to initiate the motor, run it with the help of the control algorithm, and then when told, stop the motor.
+
+The hardware of the bike is set up to allow for UART (Universal Asynchronous Receiver/Transmitter) communication with the motor controller. For this communication to work, the exact commands that has to be sent for each action that the controller needs to perform, has to be figured out. These commands will have to be sent with the correct encoding from LabVIEW, otherwise they will not be interpreted correctly by the controller.
+
+When the communication protocol is working, the control algorithm should be connected to the motor controller using that protocol via LabVIEW. This should be done in the same way as described in section \ref{steeringMotor}, and will enable the two motors to be controlled based on the same algorithm.
+
+\section{Safety and User Experience improvements}
+
+After the software features have been created, it should be ensured that they contain safety features that prevents them from causing damage to neither humans nor hardware. This should be achieved by implementing limits between the signals given by the control algorithm, and the motor controllers. These limits should be based on the current state of the bike. If the limits are implemented correctly, the motors should not be able to be controlled in such a way which will lead to dangerous behavior.
+
+Part of improving the overall safety of the bike includes improving the user experience of the front end in the LabVIEW program. This will mainly include cleaning up the interface, so that it becomes easier to use.

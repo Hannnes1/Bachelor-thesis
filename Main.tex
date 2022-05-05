@@ -24,14 +24,14 @@
 \input{include/frontmatter/Acknowledgements}
 
 % Acronyms
-\newpage
-\addcontentsline{toc}{chapter}{List of Acronyms}
-\input{include/frontmatter/Acronyms}
+%\newpage
+%\addcontentsline{toc}{chapter}{List of Acronyms}
+%\input{include/frontmatter/Acronyms}
 
 % Nomenclature
-\newpage
-\addcontentsline{toc}{chapter}{Nomenclature}
-\input{include/frontmatter/Nomenclature}
+%\newpage
+%\addcontentsline{toc}{chapter}{Nomenclature}
+%\input{include/frontmatter/Nomenclature}
 
 % TABLE OF CONTENTS
 \newpage
@@ -39,20 +39,20 @@
 
 % OTHER FRONTMATTER
 % List of figures (add to table of contents)
-\cleardoublepage
-\addcontentsline{toc}{chapter}{\listfigurename} 
-\listoffigures
+%\cleardoublepage
+%\addcontentsline{toc}{chapter}{\listfigurename} 
+%\listoffigures
 % List of tables (add to table of contents)
-\cleardoublepage
-\addcontentsline{toc}{chapter}{\listtablename}  
-\listoftables
+%\cleardoublepage
+%\addcontentsline{toc}{chapter}{\listtablename}  
+%\listoftables
 
 
 % START OF MAIN DOCUMENT
 \cleardoublepage
 \setcounter{page}{1}
 \pagenumbering{arabic}			% Arabic numbering starting from 1 (one)
-\setlength{\parskip}{0pt plus 1pt}
+\setlength{\parskip}{\baselineskip}
 
 % INTRODUCTION
 \input{include/Introduction}
@@ -70,9 +70,8 @@
 \input{include/Conclusion}
 
 % REFERENCES / BIBLIOGRAPHY
-\cleardoublepage
-\addcontentsline{toc}{chapter}{Bibliography}
-\input{include/backmatter/References}
+\emergencystretch=1em
+\printbibliography
 
 % APPENDICES
 \cleardoublepage
