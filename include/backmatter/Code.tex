@@ -1,0 +1,376 @@
+\chapter{Code} \label{code}
+
+This Appendix contains some of the code that have been used on the bike, or during the project. Some of the code, like the main LabVIEW program, is difficult to include in the appendix, but can be found on the Github repository together with all of the other code at the following URL: \url{https://github.com/Hannnes1/autobike}
+
+\section{Balancing Algorithm} \label{code:balancing}
+
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    belowskip=3em,
+}
+
+\begin{lstlisting}
+// balancing.h
+
+#ifndef _BALANCING_H_
+#define _BALANCING_H_
+
+#define gearRatio 111.0
+#define pi 3.141592
+
+#define windupGuard 6
+
+double integral = 0;
+double derivative = 0;
+
+double previousError = 0;
+
+extern double stabilizeBike(double rollRate, double Kp, double Ki, double Kd);
+
+double calculateSteeringPWM(double angularVelocity);
+
+double pid(double reference, double currentValue, double Kp, double Ki, double Kd);
+
+#endif
+\end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}
+// balancing.c
+
+#include "balancing.h"
+
+extern double stabilizeBike(double rollRate, double Kp, double Ki, double Kd) {
+    double steeringRate = pid(0, rollRate, Kp, Ki, Kd);
+
+    // Send Steering Rate Reference value to steering motor controller
+    double steeringPWM = calculateSteeringPWM(steeringRate);
+
+    // Right now, the PWM is between 10 and 90 (this should be scaled down by a factor of 100)
+    // if the angular velocity is between -0.9435 and 0.9435.
+    // That means that the error can be at most +- 0.04715 if integral is 0.
+    // (With Kp = 10, Ki = 10, Kd = 0)
+    // Changing to Kp = 0.2, Ki = 0, Kd = 0, the error can at most be +- 4.715.
+    return steeringPWM;
+}
+
+// Is there any reason not to calculate the PWM directly in the pid function?
+// How can we even be sure that the angularVelocity matches reality?
+double calculateSteeringPWM(double angularVelocity) {
+    double rpm = -angularVelocity * 30 / pi * gearRatio;  // To comply with Right Hand Rule
+    return 50 + rpm * 40.0 / 1000.0;
+}
+
+double pid(double reference, double currentValue, double Kp, double Ki, double Kd) {
+    double error = reference - currentValue;
+
+    integral += error;
+    derivative = error - previousError;
+
+    if (integral < -windupGuard) {
+       integral = -windupGuard;
+    } else if (integral > windupGuard) {
+        integral = windupGuard;
+    }
+
+    previousError = error;
+
+    return Kp * error + Ki * integral + Kd * derivative;
+}
+\end{lstlisting}
+
+\newpage
+
+\section{VESC UART Encoder}
+
+\begin{lstlisting}
+// common.h
+
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
+typedef unsigned char uint8_t;
+typedef unsigned   uint32_t;
+typedef short  int16_t;
+typedef unsigned short  uint16_t;
+
+unsigned short crc16(unsigned char *buf, unsigned int len);
+
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}
+// common.c
+
+#include "common.h"
+
+// CRC Table.
+const unsigned short crc16_tab[] = {
+    0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+    0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+    0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+    0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+    0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+    0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+    0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+    0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+    0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+    0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+    0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+    0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a, 
+    0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+    0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+    0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+    0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+    0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+    0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+    0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+    0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+    0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+    0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+    0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+    0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+    0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+    0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+    0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+    0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+    0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+    0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+    0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+    0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
+};
+
+// Calculates checksum bytes, based on payload and crc16_tab above.
+unsigned short crc16(unsigned char *buf, unsigned int len) {
+    unsigned int i;
+    unsigned short cksum = 0;
+    for (i = 0; i < len; i++) {
+        cksum = crc16_tab[(((cksum >> 8) ^ *buf++) & 0xFF)] ^ (cksum << 8);
+    }
+    return cksum;
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+// vescEncoder.h
+
+#ifndef _VESC_H_
+#define _VESC_H_
+
+#include "common.h"
+
+unsigned short crc16(unsigned char *buf, unsigned int len);
+
+extern void sendAlive(uint8_t *array);
+
+extern int setRpm(uint8_t* array, int rpm);
+
+extern int setCurrent(uint8_t *array, int current);
+
+void bufferAppendFloat32(uint8_t* buffer, float number, float scale, int *index);
+
+void bufferAppendInt32(uint8_t* buffer, int number, int *index);
+
+uint8_t *buildPacket(uint8_t *data, unsigned int len);
+
+uint8_t txBuffer[512 + 6];
+
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}[escapeinside=``]
+// vescEncoder.c
+
+#include "vescEncoder.h"
+#include "common.h"
+
+#include <string.h>
+
+static unsigned char buffer[1024];
+`\newpage`
+// Calculates command used to keep the motor alive.
+extern void sendAlive(uint8_t *array) {
+    int index = 0;
+
+    buffer[index++] = 30; // Number correspondning to the keepAlive command.
+
+    // Build the packet for the command.
+    uint8_t *packet = buildPacket(buffer, index);
+
+    // Copy calculated packet to the referance array.
+	for (uint8_t i = 0; i < 10; i++) {
+        array[i] = packet[i];
+    }
+}
+
+// Calculates command used to set the current of the motor.
+// Based on the given parameter "current".
+extern int setCurrent(uint8_t *array, int current) {
+	int index = 0;
+
+	buffer[index++] = 6; // Number correspondning to the setCurrent command.
+
+    // Rescale the current and swap its endianness.
+	bufferAppendFloat32(buffer, (float) current, 1000.0, &index);
+
+    // Build the packet for the command.
+    uint8_t *packet = buildPacket(buffer, index);
+
+    // Copy the calculated packet unto the referance array.
+	for (uint8_t i = 0; i < 10; i++) {
+        array[i] = packet[i];
+    }
+	return current;
+}
+
+// Calculates command used to set the rpm of the motor.
+// Based on the given parameter "rpm".
+extern int setRpm(uint8_t *array, int rpm) {
+    int index = 0;
+
+    rpm *= 250; // Convert to the actual RPM of the bike's pedals.
+
+    buffer[index++] = 8; // Number correspondning to the setRpm command.
+
+    // Swpan the endianness of the rpm.
+    bufferAppendInt32(buffer, rpm, &index);
+ 
+    // Build the packet for the command.
+    uint8_t *packet = buildPacket(buffer, index);
+
+    // Copy the calculated packet unto the referance array.
+    for (uint8_t i = 0; i < 10; i++) {
+        array[i] = packet[i];
+    }
+    return rpm;
+}
+
+// Builds the packet based on the given command and payload.
+// See http://vedder.se/2015/10/communicating-with-the-vesc-using-uart/ for more information.
+uint8_t *buildPacket(uint8_t *data, unsigned int len) {
+    int bufferIndex = 0;
+
+    if (len <= 256) {
+        txBuffer[bufferIndex++] = 2;
+        txBuffer[bufferIndex++] = len;
+    } else {
+        txBuffer[bufferIndex++] = 3;
+        txBuffer[bufferIndex++] = len >> 8;
+        txBuffer[bufferIndex++] = len & 0xFF;
+    }
+
+    memcpy(txBuffer + bufferIndex, data, len);
+    bufferIndex += len;
+
+    unsigned short crc = crc16(data, len);
+    txBuffer[bufferIndex++] = (uint8_t)(crc >> 8);
+    txBuffer[bufferIndex++] = (uint8_t)(crc & 0xFF);
+    txBuffer[bufferIndex++] = 3;
+
+    return txBuffer;
+}
+
+// Rescales the given "number" with "scale", before swapping its endianness with "bufferAppendInt32".
+void bufferAppendFloat32(uint8_t* buffer, float number, float scale, int *index) {
+    bufferAppendInt32(buffer, (int)(number * scale), index);
+}
+
+// Swaps the endianness of the given "number".
+void bufferAppendInt32(uint8_t *buffer, int number, int *index) {
+    buffer[(*index)++] = number >> 24;
+    buffer[(*index)++] = number >> 16;
+    buffer[(*index)++] = number >> 8;
+    buffer[(*index)++] = number;
+}
+\end{lstlisting}
+
+\newpage
+
+\section{MATLAB Test Data Plotting} \label{code:plotting}
+
+\lstset{
+    language=Matlab,
+}
+
+\begin{lstlisting}
+% Read all of the data in the TDMS file.
+data = tdmsread("Logs/Test4.tdms");
+
+%% Encoder
+
+% `data` contains one cell per group. Each cell contains
+% a table with one column per channel. In this case, the
+% first channel in the first group contains the time, 
+% and the second channel contains the position etc.
+time1 = table2array(data{1,1}(:,1));
+position = table2array(data{1,1}(:,2));
+velocity = table2array(data{1,1}(:,3));
+
+figure;
+yyaxis left;
+% 611 is the conversion ratio from counts on the encoder
+% to degrees.
+plot(time1-time1(1),position/611);
+ylim([-20,20]);
+ylabel("Position (degrees)");
+hold on;
+yyaxis right;
+plot(time1-time1(1),velocity/611*1000);
+ylim([-50,50]);
+ylabel("Velocity (degrees/s)");
+xlabel("Time (seconds)");
+xlim([7,11.5]);
+title("Steering motor readings");
+hold off;
+
+%% Gyro
+time2 = table2array(data{1,2}(:,1));
+rollRate = table2array(data{1,2}(:,2));
+
+figure;
+plot(time2-time2(1),rollRate);
+ylabel("Roll rate");
+xlabel("Time (seconds)");
+title("Gyro");
+
+%% Steering motor
+
+time3 = table2array(data{1,3}(:,1));
+pwm = table2array(data{1,3}(:,2));
+
+figure;
+plot(time3-time3(1),pwm);
+ylim([0,1]);
+ylabel("Duty cycle");
+xlabel("Time (seconds)");
+title("Steering motor control");
+
+%% Combined
+
+figure;
+yyaxis left;
+plot(time3-time2(1),pwm);
+ylim([0,1]);
+ylabel("Duty cycle");
+hold on;
+yyaxis right;
+plot(time2-time2(1),rollRate);
+ylabel("Roll rate");
+ylim([-10,10]);
+xlim([7,11.5]);
+xlabel("Time (seconds)");
+title("Duty cycle and Roll rate");
+\end{lstlisting}

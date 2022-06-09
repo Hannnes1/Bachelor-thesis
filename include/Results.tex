@@ -1,3 +1,32 @@
 % CREATED BY MAGNUS GUSTAVER, 2020
-\chapter{Results}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\chapter{Results}\label{results}
+
+This chapter presents the results of the project, primarily the result corresponding to the main aim of the project, meaning the bike's ability to balance, will be presented. The results correlating to the sub-goals: how the bike performs with regards to the steering motor, forward motor and balancing algorithm are also presented. Finally the reasons behind the results, and the effects of them are discussed.
+
+\section{Steering Motor}
+
+The steering motor, when viewed as a standalone component fully works as intended. That is, it is disabled until the \textit{Go} button is pressed in LabVIEW, and then it can be controlled by changing the duty cycle between 10\% and 90\%. It also stops when the duty cycle is set to 50\% as expected. When the emergency stop is pressed either physically or in the software, the duty cycle is set to 50\%, and the pin is disabled. 
+
+When connecting the control of the steering motor to the balancing algorithm and safety limit, the motor turns towards the same direction which the bike is leaning, and the duty cycle is set to 50\% when the safety limits is reached. However, the steering wheel has the possibility of overshooting the safety limit, this is caused by the inertia of the steering wheel and handlebar, it also depends on how fast it was rotating before the limit was reached.
+
+\todo{Maybe insert image of front panel control?}
+
+\section{Forward Motor}
+
+The RPM of the forward motor can successfully be set using the LabVIEW front panel, and also changed while the program is running. The forward motor only starts when \textit{Go} is pressed, and it stops when the emergency stop is pressed; note that this is the same behavior as the steering motor has. 
+
+The motor can not only be controlled by setting its RPM, but also by changing its current. Controlling the motor using current can be accomplished if the function called by the \textit{Call Library Function Node} is changed to \texttt{setCurrent}. Additional methods of controlling the motor can be added by creating and calling additional C functions based on the example by Vedder.
+
+\section{Balancing Algorithm} \label{results:balancing}
+
+Text and graphs and shit....\todo{Write}
+
+\section{Loop Times}
+
+Text and image(?) over loop time....\todo{Write}
+
+\section{Discussion}
+
+The improvement of the development experience is one aim which was presented in \ref{intro:aim}, this aim is however not mentioned above. The reason being this decision it that it is difficult to assess if the aim has been reached or not, since it can be considered individual to a certain degree. What can be said is that all of the code which is used has been moved to a single location, which should make it easier to find the code. It should also now be much clearer what code is the most recent one. The code itself has been organized and separated into sub-VIs which should also make it easier to find the relevant code, this in combination with more comments should also make it easier to understand it.
+
+Continuation....\todo{Write}

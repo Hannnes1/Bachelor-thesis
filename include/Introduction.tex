@@ -1,32 +1,28 @@
 % CREATED BY MAGNUS GUSTAVER, 2020
 \chapter{Introduction}
 
-This introductory section presents the background and current state of the Autobike project. The different aims of the given assignment is also described, together with its limitations and boundaries. Finally the specific issues which this report investigates are also listed and presented; these issues are derived from the aim of the assignment.
+This introductory chapter initially presents the background behind the Autobike project, included in this background is when and why the project was created. The background also gives an overview of the current state of the Autobike project. The different aims of the given assignment are also described, this section clarifies what the main goal is and the sub-goals thereof. Finally the limitations and boundaries of the assignment, its aim and its goals, are formulated.
 
 \section{Background}
 
-The Autobike project was started at Chalmers in 2017 with the goal of creating a self driving bike, which could be used to test the safety systems in cars. The bike needed to resemble a normal bike to the greatest extent possible, while also being able to balance on its own and follow a predetermined path. Two versions of the bike has been created at Chalmers, the black bike and red bike. The red bike was improved upon by students at Mälardalen University (MDU) during 2021; it is this version of the bike which is in need of further development from this project.
+As self driving cars are becoming more common, it is important that they can react properly to all possible traffic situations. One of these situations include cyclists, which have a unique behavior which the cars will need to be able to handle \cite{ArgoAI2021AutonomousCyclists}. Due to this unique behavior, bikes should be classed as a distinct object when training the self driving algorithms. To achieve this, real bikes have to be used in the training. However, since there is a possibility of the cars hitting the bikes during development, it is not reasonable to have a person driving the bike. A need to develop a self driving bike that replicates a bicycle and a real cyclist as closely as possible has therefore appeared.
 
-The previous work focused mostly on the hardware of the bike, as well as parts of the software made using the graphical programming language LabVIEW \cite{NationalInstruments2022WhatLabVIEW}. The main purpose of the LabVIEW code is to communicate with the sensors and I/O on the MyRIO-1900 \cite{NationalInstruments2022MyRIO-1900} that controls the bike. The main components which are yet to be completed on this version of the bike are the control algorithm for the two motors of the bike, as well as the code for communication with the so called "forward motor", which drives the bike.
+The Autobike project was started at Chalmers in 2017 with the goal of creating a self driving bike, which could be used to test the safety systems in cars. The bike needed to resemble a normal bike to the greatest extent possible, while also being able to balance on its own and follow a predetermined path. Two versions of the bike has been created at Chalmers, the \textit{black bike} and \textit{red bike}. The red bike was later improved upon by students at Mälardalen University (MDU) during 2021; it is this version of the bike which is in need of further development from this project.
 
-The other version of the bike that was created at Chalmers, the black bike, is programmed in Python. This version has an algorithm for balancing the bike while it is moving forward. It is this algorithm which is supposed to be used in the red bike, but since LabVIEW and the MyRIO-1900 does not support Python, the algorithm must be converted into C.
+The previous work on the red bike focused primarily on the hardware, as well as parts of the software made using the graphical programming language LabVIEW \cite{NationalInstruments2022WhatLabVIEW}. The main purpose of the LabVIEW code is to communicate with the sensors and I/O on the MyRIO-1900 \cite{NationalInstruments2022MyRIO-1900} which controls the bike. The main software components which are yet to be completed or created for this version of the bike are the control algorithm for the two motors of the bike, as well as the code for communication with the so called \textit{forward motor}, which drives the bike forward \cite{AronssonKarlsson2022PROJECTAUTOBIKE}.
 
-\section{Aim}
+The other version of the bike that was created at Chalmers, the black bike, is completely programmed in Python. This version has an algorithm for balancing the bike while it is moving forward. It is this algorithm which is supposed to be used in the red bike, but since LabVIEW and the MyRIO-1900 does not support Python, the algorithm must be converted into C.
 
-The aim of the assignment is completing the software for the Autobike that was worked on by the students at MDU. The main focus is the implementation of control algorithms written for the other version of the project. These algorithms must be changed and adapted to function together with the hardware and software used by the current iteration of the bike. The desired result of implementing the control algorithms is that the control signals for the two motors can be calculated, based on the signals from the bike's sensors.
+\section{Aim} \label{intro:aim}
 
-Another aim is programming the software needed to communicate with the bike's forward motor. Achieving this aim will result in the speed of the motor being able to be controlled from the bike's microcontroller.
+The main aim or goal of the assignment is to further develop the software for the Autobike, so that the red bike can balance on its own, while driving forward. To guide the project towards reaching the main goal, a number of sub-goals have been created.
 
-The intended result of completing the goals presented above, is the speed of the bike's motors being able to be controlled based on the bike's sensors and control algorithm. This should result in the bike should be able to balance autonomously while maintaining a forward velocity.
+The first, and most important sub-goal is the adaption and implementation of the balancing algorithms written for the black bike. This algorithm must be changed and adapted to function together with the hardware and software used by the red bike. The desired result of implementing the algorithm is that the input signals for the steering motor can be calculated based on the signals from the bike's sensors as well as parameters set in the bike's software. The completed code should also guarantee that the bike is controlled within desired safety limits.
 
-The assignment also has the secondary aim of improving the safety and user experience of the Autobike. To achieve improved safety, the completed code should guarantee that the bike is controlled within the desired safety limits. The preexisting software should also be modified so that the user controls becomes more intuitive, and therefore improving the user experience when testing the bike.
+Another sub-goal is programming the software needed to communicate with the bike's forward motor. Achieving this aim will result in the ability to control the speed of the motor from the bike's software.
+
+A secondary aim of the project is to improve the development experience of the bike's software. This includes organizing the project's files, and commenting all of the code so that it can be understood by future developers. Accomplishing this should result in it being easier to continue the development when this iteration of the project is completed.
 
 \section{Limitations}
 
-The main limitation in this assignment is that the only part of the Autobike that will be changed in is the software; the hardware will be left in its current state. Additionally, code that enables the bike to follow a predetermined path will not be written.
-
-\section{Specification of Issue Under Investigation}
-
-Based on the aim of the assignment, three questions are derived which this report is going to answer. These questions are:This chapter presents the section levels that can be used in the template.
-
-
+The main limitation of the given assignment is that the only part of the Autobike which will be changed is the software; the hardware will be left in its current state. Additionally, code that enables the bike to follow a predetermined path will not be written. It should therefore not be a goal that the bike can drive in a straight line either, since this would require knowledge about the current and past positions. 
