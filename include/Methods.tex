@@ -63,7 +63,7 @@ Before the code could be used, the parts of the code which are relevant to the c
 
 \subsubsection{Identifying Relevant Code}
 
-Since the software used on the black bike was written entirely in Python, a large amount of the code had the same or similar functionality as the LabVIEW code for the red bike. For reference, the folder that was received contained in total 156 python files with a combined 20 253 lines of code\footnote{As reported by running the following commands in a Linux terminal:\\\texttt{find . -mindepth 1 -type f -name "*.py" -printf x | wc -c}\\\texttt{wc -l `find . -type f -name "*.py"`}}. Code which was used for loading simulations from CSV files were also present in most of files. From this it could be concluded that almost all of the received code was not relevant for the red bike and would not have to be used.
+Since the software used on the black bike was written entirely in Python, a large amount of the code had the same or similar functionality as the LabVIEW code for the red bike. For reference, the folder that was received contained in total 156 python files with a combined 20 253 lines of code\footnote{As reported by running the following commands in a Linux terminal:\\\texttt{find . -mindepth 1 -type f -name "*.py" -printf x | wc -c} and\\\texttt{wc -l `find . -type f -name "*.py"`}}. Code which was used for loading simulations from CSV files were also present in most of files. From this it could be concluded that almost all of the received code was not relevant for the red bike and would not have to be used.
 
 Trajectory tracing is also not a part of this project's goal, meaning the only part of the code that would be needed was the code which relates to keeping the bike stable. This code was located in the file \texttt{controller.py} and more specifically in the function \texttt{keep\_the\_bike\_stable}. The function also called another function, \texttt{update}, which implemented a PID controller in parallel form according to:
 
@@ -171,7 +171,7 @@ After concluding that both motors worked separately, the balancing algorithm was
 
 The bike roller test made it possible to replicate the effects of going forwards while not requiring a large amount of space. The test consisted of placing the bike on the roller and turning on both motors. For safety the bike was held, though this was done whilst trying to not manually interfere in its movement. The aim of this test was to examine if the motors worked in tandem, and if it seemed as the bike could potentially balance on its own. It should be noted that a large restricting factor of this test is the limited space the bike can move sideways before reaching the boundary of the roller.
 
-\subsubsection{Unaided Test}
+\subsubsection{Unaided Test} \label{method:unaidedTest}
 
 To test the bike using an approach closer to a real world environment, a series of tests were performed outdoors in a flat and open area. This test made it possible to drive the bike forward, as well as allowing it to move sideways, mitigating the limit of the previous bike roller test. To prevent the bike from falling and potentially being damaged, two people ran alongside the bike ready to catch in the case it would fall.
 
