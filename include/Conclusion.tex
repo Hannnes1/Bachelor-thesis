@@ -1,6 +1,18 @@
 % CREATED BY MAGNUS GUSTAVER, 2020
 \chapter{Conclusion}
 
-Hardware has to improve, things has to be mounted.
+The main goal of the project was to develop the software for the Autobike so that it could balance on its own whilst driving forward. In practice this meant completing two sub-goals: implementing an algorithm which, using the roll rate of the bike, could calculate the correct duty cycle for the steering motor, as well as writing software to encode a UART command which then could be used to control the forward motor.
+
+As described in the results, the two sub-goals were reached. The forward motor can be controlled from LabVIEW, and the steering motor is controlled by the balancing algorithm. However, the main aim of the project was not reached. The reasons behind this result are plausibly twofold: the performance of the balancing algorithm has to be improved, and the hardware has to be improved. The former is mainly accomplished by tuning the gains of the PID controller, but it is also possible that some parts of the controller code has to be changed to give better values. 
+
+Before attempting to make the bike function by only tuning the software, the hardware has to be examined. As mentioned in the results, neither the IMU nor the battery are properly mounted, which causes the center of gravity to shift and introduces unnecessary noise in the roll rate. Both of these factors, combined with the large dimensions and high mounting position of the electronics box, leads to a suboptimal foundation for creating a good performing software.
+
+The secondary goal of the project, improving the future development experience, is as previously discussed difficult to judge if it has been reached. The wording "improving" does not contain the degree of which this should be done, meaning any small improvement could be interpreted as reaching the goal. However, continuously during the project's development, files have been organized and cleaned up; both for the benefit of the current developers, but more importantly for any future developers. The question of whether this goal has been reached or not is therefore best judged by these future developers.
 
 \section{Future work}
+
+The main focus of any future work on the Autobike should be to ensure that the hardware is adequate. Only then can the software, and more specifically the balancing algorithm, be improved. The quickest way to improve the hardware would be to ensure that everything is mounted properly, but in the ideal scenario, the electronics box should be replaced with a version which is significantly smaller in size, as well as lighter in weight.
+
+When the hardware is improved as described above, it should then be examined why the motor does not seem to rotate quickly enough to stop the bike from falling. This happens even if the algorithm commands it to rotate as quickly as possible towards a certain direction. This report did not find a reason for this, and it could either be caused by software, hardware, or a combination thereof.
+
+As a third step, the balancing algorithm should be examined to ensure that it fully works as expected. Only then can the PID gains be tuned and refined to get the bike to balance properly.

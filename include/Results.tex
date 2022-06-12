@@ -32,18 +32,18 @@ When the bike was then placed on the roller, it seemed as if the bike could stay
 
 The final and most reliable test of the balancing algorithm was done outdoors as described in \ref{method:unaidedTest}. The data from these tests, recorded with the logging system, are presented in the images below.
 
-Almost all of the tests resulted in the bike falling and having to be caught within the first few seconds after being let go. The data from one such example is shown in the figures below. In figure \ref{fig:test6_control} it can be seen that the bike starts to roll left around 21.5 seconds, which leads to the duty cycle going below 50\%. The steering wheel also turns to the left around the same time, which is the expected behavior. The roll rate then increases as the bike leans to the right, and the behavior reverses.
+Almost all of the tests resulted in the bike falling and having to be caught within the first few seconds after being let go. The data from one such example is shown in the figures below. In figure \ref{fig:test6_control} it can be seen that the bike starts to roll left around 21.5 seconds, which leads to the duty cycle going below 50\%. The steering wheel also turns to the left around the same time, which is the expected behavior. The roll rate then increases as the bike leans to the right, and the behavior reverses. The test was done using a P gain of 0.3, I gain of 0.5, and D gain of 0.
 
 \begin{figure}[H]
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{include/test6_control.png}
+        \includegraphics[width=\textwidth]{figure/test6_control.png}
         \caption{The roll rate of the bike and duty cycle sent from the balancing algorithm.}
         \label{fig:test6_control}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{include/test6_motor.png}
+        \includegraphics[width=\textwidth]{figure/test6_motor.png}
         \caption{The position and velocity of steering motor.}
         \label{fig:test6_motor}
     \end{subfigure}
@@ -51,18 +51,18 @@ Almost all of the tests resulted in the bike falling and having to be caught wit
 \label{fig:test6}
 \end{figure}
 
-Only a small amount of tests had the bike balancing and not falling within the first few seconds. One of these tests where the bike managed to stay upright for a longer period of time is plotted in the figures below.
+Only a small amount of tests had the bike balancing and not falling within the first few seconds. One of these tests where the bike managed to stay upright for a longer period of time is plotted in the figures below. Here, the P gain was 2, and the I and D gain were set to 0.
 
 \begin{figure}[H]
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{include/test4_control.png}
+        \includegraphics[width=\textwidth]{figure/test4_control.png}
         \caption{The roll rate of the bike and duty cycle sent from the balancing algorithm.}
         \label{fig:test4_control}
     \end{subfigure}
     \begin{subfigure}{.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{include/test4_motor.png}
+        \includegraphics[width=\textwidth]{figure/test4_motor.png}
         \caption{The position and velocity of steering motor.}
         \label{fig:test4_motor}
     \end{subfigure}
@@ -80,7 +80,7 @@ For the loop time tests all of the bikes hardware was enabled so that all contro
 
 The improvement of the development experience is one aim which was presented in \ref{intro:aim}, this aim is however not mentioned above. The reason being this decision it that it is difficult to assess if the aim has been reached or not, since it can be considered individual to a certain degree. What can be said is that all of the code which is used has been moved to a single location, which should make it easier to find the code. It should also now be much clearer what code is the most recent one. The code itself has been organized and separated into sub-VIs which should also make it easier to find the relevant code, this in combination with more comments should also make it easier to understand it.
 
-When examining the plots made from the data acquired during the tests of the balancing algorithm, it is hard to draw any clear conclusions about why the bike behaves as it does. The reason for this is the limited time which the data is actually being collected. What can be extracted from the graphs is that the duty cycle reaches its limits of 0.9 and 0.1 as soon as the roll rate goes above and below 0, respectively. After examining the code in the balancing algorithm, it seems as if the most important reason behind this is the \texttt{calculateSteeringPWM} function. This function converts the angular velocity calculated by the \texttt{pid} function to the duty cycle. The function causes a small roll rate (over 0.94 when $K_p$ is 1) to result in a duty cycle outside of the allowed range. Even if the duty cycle reaches the limit when the roll rate is small, it does not seem as if the motor rotates quickly enough to stop the bike from falling.
+When examining the plots made from the data acquired during the tests of the balancing algorithm, it is hard to draw any clear conclusions about why the bike behaves as it does. The reason for this is the limited time which the data is actually being collected. What can be extracted from the graphs is that the duty cycle reaches its limits of 0.9 and 0.1 as soon as the roll rate goes above and below 0, respectively. After examining the code in the balancing algorithm, it seems as if the most important reason behind this is the \texttt{calculateSteeringPWM} function. This function converts the angular velocity calculated by the \texttt{pid} function to the duty cycle. The function causes a small roll rate (over 0.94 when $K_p$ is 1) to result in a duty cycle outside of the allowed range. Even if the duty cycle reaches the limit when the roll rate is small, it does not seem as if the motor rotates quickly enough to stop the bike from falling. The reason for this is not clear.
 
 The quick changes in roll rate caused by vibrations in the IMU is possibly due to it not being mounted properly. It is now held in place mainly by friction, which might cause it to move slightly. This is also the case for other piece of hardware used by on the bike; the battery does for example not have any sort of mounting at all, which causes it to move around as the bike leans.
 
