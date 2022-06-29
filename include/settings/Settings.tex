@@ -37,6 +37,7 @@
 \usepackage[all]{nowidow}                           % No single lines at start of page
 \usepackage{siunitx}
 \usepackage{emptypage}                              % Empty page between chapters
+\usepackage{textcomp, gensymb}
 
 % DEFINE THESIS TYPE
 \def\ThesisType{B} % M - master, B - bachelor
@@ -121,6 +122,23 @@
 
 % Add references
 \addbibresource{references.bib}
+
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    belowskip=1em,
+}
 
 
 

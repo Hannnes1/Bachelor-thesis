@@ -3,7 +3,7 @@
 
 The methods chapter describes the methods which have been used in an attempt to reach the end goal of the project. In addition to this, it is explained why these specific methods were chosen. Any additional information which might be needed to understand the used methods and reasoning behind them, is located within the previously presented theory section.
 
-\section{Configuring the toolchain}
+\section{Configuring the Toolchain}
 
 The tools and software used to program and control the Autobike had already been decided to a large extent by the previous groups which worked on the project, as well as other stakeholders. It was therefore necessary to install these tools before the previous work could be examined to the fullest extent, and before further work could commence.
 
@@ -15,7 +15,7 @@ The parts of the Autobike software that were already written had been done in La
 
 It should be noted that the installation of LabVIEW and the necessary packages is more time consuming and problem-ridden than what might first be expected. The installation itself is not uncommon to take multiple hours, especially if the computer's storage space runs out in the middle of an installation. This step was further delayed due to downloads from the National Instruments website not working for several days.
 
-\subsection{Text editor and build tools for C code}
+\subsection{Text Editor and Build Tools for C Code}
 
 Some of the more advanced algorithms used in the Autobike were better suited to be written using C code, and called by the main LabVIEW program. These algorithms include code written for another version of the bike with the purpose of controlling the steering motor, as well as code needed in the communication with the forward motor.
 
@@ -55,6 +55,10 @@ Testing the code by starting the program, pressing the "Go" button, and changing
 
 The following subsections describes the methodology and process of completing the software for the steering motor. This includes identifying and translating relevant code from another version of the Autobike, using the gyroscope built into the IMU together with the algorithm to control the steering motor, and implementing safety limits to the motor's range of motion.
 
+\subsection{Configuring the ESCON Motor Controller} \label{methods:configESCON}
+
+Since the black bike has the same forward motor and controller, as well as a functioning configuration of these, the ESCON motor controller parameter configuration was exported using ESCON Studio and uploaded to the controller of the red bike. After copying the configuration, the diagnostics tool in ESCON Studio was run to validate that the motor worked, and that its angular velocity followed the setpoint value. The most important settings included in the transferred configuration includes the maximum angular velocity of 4000 RPM, and an increase of the motor's acceleration.
+
 \subsection{Transferring Control Algorithm From the Black Bike}
 
 To reach the end goal of creating a bike which can balance on its own, code that was written for the other version of the bike, the so called black bike, were to be converted as to work with the current version which this project relates to. The software for the black bike had been written completely in Python, however it still used a MyRIO. 
@@ -71,7 +75,7 @@ Trajectory tracing is also not a part of this project's goal, meaning the only p
     u(t) = K_p e(t) + K_i \int_{0}^{t} e(t)dt + K_d \frac{de}{dt}
 \end{equation*}
 
-The value returned from this function is then further sent to another function, named \texttt{controller\_set\_handlebar\_angular\_velocity}. This final function calculates the angular velocity of the motor based on some safety limits, and calls a function to convert the angular velocity to a duty cycle. In Python, this conversion is done using the \texttt{interp} function from the \textit{NumPy} library with the velocity on the x-axis, and PWM on the y-axis. In C this as been converted to \texttt{50 + rpm * 40.0 / 1000.0}, which gives a value between 0 and 100 when \texttt{rpm} is in the range of the motors angular velocity.
+The value returned from this function is then further sent to another function, named \texttt{controller\_set\_handlebar\_angular\_velocity}. This final function calculates the angular velocity of the motor based on some safety limits, and calls a function to convert the angular velocity to a duty cycle. In Python, this conversion is done using the \texttt{interp} function from the \textit{NumPy} library with the velocity on the x-axis, and PWM on the y-axis. In C this as been converted to \texttt{50 + rpm * 40.0 / 4000.0}, where 4000 is the maximum angular velocity (in RPM) of the motor. This gives a value between 10 and 90 when \texttt{rpm} is in the range of the motor's angular velocity.
 
 \subsubsection{Converting Python to C}
 
@@ -79,9 +83,28 @@ The previous project group that worked on the bike considered using a language c
 
 The conversion process started with a new C project being created and the identified Python functions being copied there. The code was then adapted to fit the C syntax, at the same time as irrelevant code was removed. This irrelevant code mainly included lines that was only called when a simulation file were present, but some code was also removed since it did not have any effect on the rest of the program (for example variables that were written to, but then never used). The safety limits were also removed and not implemented in the C code because it was decided they would be created in LabVIEW instead. This decision was based upon two reasons: to facilitate a better understanding and easier debugging of the code by having as much code written in LabVIEW as possible, as well as being able to use LabVIEW to log when a safety limit had been exceeded.
 
-Another change that was made to the control algorithm when converting it into C code was the removal of code that depended on the time, i.e. the integral and derivative action in the PID controller. The integral of the error was instead implemented by adding the current error to the previous errors once every time the function was called. The derivative of the error was calculated as the difference between the current and previous error (the error the last time the function was called).
+Another change that was made to the control algorithm when converting it into C code was the removal of code that depended on the time, i.e. the integral and derivative action in the PID controller. The integral of the error was instead implemented by adding the current error to the previous errors once every time the function was called. The derivative of the error was calculated as the difference between the current and previous error (the error the last time the function was called). The resulting function is shown below.
 
-\subsection{Automating steering motor control}
+\begin{lstlisting}
+double pid(double reference, double currentValue, double Kp, double Ki, double Kd) {
+    double error = reference - currentValue;
+
+    integral += error;
+    derivative = error - previousError;
+
+    if (integral < -windupGuard) {
+       integral = -windupGuard;
+    } else if (integral > windupGuard) {
+        integral = windupGuard;
+    }
+
+    previousError = error;
+
+    return Kp * error + Ki * integral + Kd * derivative;
+}
+\end{lstlisting}
+
+\subsection{Automating Steering Motor Control}
 
 To automate the control of the steering motor, meaning automatically calculating the duty cycle deciding which direction and how quickly the motor should rotate, a shared library file of the converted C code was created and uploaded to the MyRIO. The bike's roll rate\footnote{Roll rate in this case means the speed of which the bike rotates along its lengthwise axis.}, read from the IMU's gyroscope, as well as the three respective PID gains were then connected to a \textit{Call Library Function Node} in LabVIEW. The node was set to call one of the functions from the C algorithm. The called function uses these four parameters and returns the calculated duty cycle.
 
@@ -93,9 +116,11 @@ The duty cycle is then sent to a node in LabVIEW which creates a PWM signal. Thi
 
 \subsubsection{Calibrating Gyroscope}
 
-When the automated control of the steering motor was tested, it was discovered that the motor rotated even if the bike was not moving. During an investigation of the graphs that plotted the gyroscopes values, it appeared as though the average value of the rotational rate around the roll axis was non-zero, even when the bike was stationary. This seems to be a case of a "constant bias error" \cite{Beavers2017TheGyro}.
+The IMU's placement at an angle resulted in none of its axes correctly corresponding to the roll rate of the bike. Therefore the misalignment had to be changed or compensated for to make the gyroscope's readings as accurate as possible. Code could be written which compensates for this by combining readings from multiple axes, but this was considered to be too complicated in comparison with rearranging the IMU. Even though the project's limitations included that the hardware of the Autobike would not be changed, the rubber block which the IMU is placed in, was measured and cut so that the IMU's Z-axis corresponded with the bike's roll rate.
 
-To counteract the error, the bike was kept stationary over a time while the values returned from the gyroscope for the roll axis was recorded. The average of these recordings was then calculated and the negative of this average was added to the gyroscope's output to correct the error. It should be noted that the error or "constant bias error" might drift over time, meaning the error might change. If this occurs the average offset could be calculated again, or more sophisticated methods could be utilized as mentioned in \cite{Beavers2017TheGyro}.
+When the automated control of the steering motor was tested, it was discovered that the motor rotated even though the bike was not moving. During an investigation of the graphs that plotted the gyroscopes values, it appeared as though the average value of the rotational rate around every axes of the gyroscope was non-zero, even when the bike was stationary. This seems to be a case of a "constant bias error" \cite{Beavers2017TheGyro}.
+
+To counteract the error, the bike was kept stationary over a time while the values returned from the gyroscope was recorded. The average of these recordings was then calculated and the negative of this average was added to the gyroscope's output for each axis to correct the error. It should be noted that the error or "constant bias error" might drift over time, meaning the error might change. If this occurs the average offset could be calculated again, or more sophisticated methods could be utilized as mentioned in \cite{Beavers2017TheGyro}.
 
 \section{Forward Motor} \label{method:forward}
 
@@ -115,7 +140,7 @@ It was hypothesized that the VESC was misconfigured in regard to the specificati
 
 The VESC Tool is also used to make sure the VESC is set to use UART as its communication interface. This is done by changing the \textit{APP to Use} to UART under \textit{App Settings > General}. The baud rate can also now be accessed and changed, but is kept at the default value of 115 200 bps.
 
-\subsection{Encoding UART command}
+\subsection{Encoding UART Command}
 
 The UART communication with the VESC is based on sending various commands which should make the motor react in a certain way. Apart from the blog post by Vedder cited in section \ref{theory:vesc} as well as his example for the STM32F4 discovery board, there exists no documentation for how the UART commands sent to the VESC should look. 
 
@@ -125,15 +150,15 @@ It was instead decided that a shared library would be created based on the examp
 
 To create this library which could be called by LabVIEW, the code that created the desired UART commands had to be identified. The functions to call and send specific commands was located in the \texttt{bldc\_interface.c} file. The three functions that have been adapted to work with the myRIO are \texttt{bldc\_interface\_set\_rpm}, \texttt{bldc\_interface\_set\_current}, as well as  \texttt{bldc\_interface\_send\_alive}. They have also been renamed to \texttt{setRpm}, \texttt{setCurrent}, and \texttt{sendAlive} respectively, to better represent  their new purpose. These functions was chosen since they were deemed to be the most useful commands related to controlling the forward motor. Functions later called by these functions have also been adapted and, in some cases, simplified. The functions \texttt{buffer\_append\_int32} and \texttt{buffer\_append\_float32} converts an integer or float values to a big-endian array, and \texttt{send\_packet\_no\_fwd} then calls a function to build and send the actual packet. In the adapted code, there is instead a function named \texttt{buildPacket} which builds and returns the packet. This function also calls \texttt{crc16} to calculate and add the checksum bytes. Finally the packet is copied to an array which is passed as a pointer to \texttt{setRPM} and \texttt{setCurrent}.
 
-\subsection{Sending UART command using LabVIEW}
+\subsection{Sending UART Command Using LabVIEW}
 
-To create the UART command using LabVIEW, the desired RPM or current is sent to a \textit{Call Library Function Node} which is set to call the correct function from the C code, after it has been compiled and uploaded to the myRIO. The called function has an additional input parameter in the form of a pointer to an array. This array is initialized in LabVIEW, so that the pointer of it can be sent to the C code. When the C code runs, the pointer is used to populate the array with the values of the command which should be sent to the VESC. 
+To create the UART command using LabVIEW, initially the desired speed of the bike in km/h is converted to the RPM of the bike's pedals. This conversion is based on the dimension of the back wheel combined with the gear ratio from the pedals to the wheel. The converted value is then sent to a \textit{Call Library Function Node} which is set to call the correct function from the C code, after it has been compiled and uploaded to the myRIO. The called function has an additional input parameter in the form of a pointer to an array. This array is initialized in LabVIEW, so that the pointer of it can be sent to the C code. When the C code runs, the pointer is used to populate the array with the values of the command which should be sent to the VESC. 
 
 The actual transmission of the command is accomplished using the \textit{UART} block in LabVIEW. The block is configured to use the UART channel corresponding to the connection with the VESC, the baud rate is also set to 115 200 bps which is the same value as was previously configured in the VESC Tool. The transmission is placed inside of a loop to prevent the VESC from going to sleep.
 
 The loop which which was desired to be used was a \textit{Timed Loop}, which executes at a precise rate specified by the user. Though due to problems with the program crashing, the type of loop was changed to a \textit{While Loop}; the cause of these crashes are unknown. A delay of one second was also introduced inside the loop to prevent it from throttling the rest of the system. The change of loop type did resolve the program crashing, though did also introduce another issue with recording loop times. This is further discussed in \ref{method:loopTimes}.
 
-\section{Cleaning up and organizing the code}
+\section{Cleaning up and Organizing the Code}
 
 In an attempt to make it easier for both the current and future people working on the Autobike project, all of the LabVIEW and C code that is used has been moved into a single folder. Previously it was separated into two different folders which had to be placed in specific locations on the development computer for LabVIEW to be able to detect them. The folder has also been uploaded to a monolithic public GitHub repository\footnote{https://github.com/Hannnes1/autobike}. The purpose of this is to make it easier to collaborate on the code, as well as making it possible to keep track of changes. It should also make it easier for others to take over development of the bike, as this was previously unnecessarily tedious. However, due to how LabVIEW functions, there is still one file which has to be manually located when opening LabVIEW on a new computer, this file is located inside \texttt{labview/bin} together with all other files that the LabVIEW project uses.
 
@@ -153,15 +178,25 @@ MATLAB was chosen as the method for analyzing the data which the logging system 
 
 \section{Testing and Validating}
 
-During the development of the bike's software, several tests have been done continuously to ensure that the developed features worked as expected. These tests include both simpler and informal tests designed to validate the bike's most basic functions, and more formal tests where values of different signals were logged. A test protocol was also constructed to be able to recreate the performed tests. It is the methodology behind these tests which will be presented in this section. The corresponding results are presented in the upcoming chapter \ref{results}.
+During the development of the bike's software, several tests have been done continuously to ensure that the developed features worked as expected. These tests include both simpler and informal tests designed to validate the bike's most basic functions, and more formal tests where values of different signals were logged.
 
-\subsection{Testing the Basic Functionality of the Motors}
+To simplify the process of replicating the tests, a testing protocol was created. In this protocol, all tests and results have been documented so that they can easily be understood and reproduced, both for this and future versions of the bike. Steps which had to be taken to reach a satisfactory result have also been documented.
 
-The first tests which were performed consisted of running the two motors at constant speeds. These tests where made to ensure that the motors worked as expected, without fluctuating speeds. 
+In this section the tests which have been performed are presented together with each test's purpose. More detailed descriptions and procedures are described in the test protocol found in appendix \ref{testingProtocol}. The most important results from the testing are also presented in the upcoming chapter \ref{results}.
 
-For the steering motor the first test was performed by running the existing LabVIEW code and adjusting the duty cycle of the motor using the slider on the front panel. During this test the bike's front wheel was suspended midair so it could rotate freely. After the balancing algorithm had been created and connected to control the steering motor, it was tested by leaning the bike and examining if the steering motor rotated in the same direction. This purpose of the latter test was only to insure the steering motor reacted when the roll rate of the bike changed, and not that the calculated control signals were reasonable.
+\subsection{Testing the Basic Functionality of the Forward Motor}
 
-The first test of the forward motor was described in \ref{method:configuringVesc}. Summarized, it was performed by using the VESC Tool to run the motor at a fixed RPM. Later on, when the code to send UART commands via LabVIEW had been created, a fixed RPM was instead sent to the motor via one of these commands. Both of the tests mentioned above were performed when the bike was stationary and elevated into the air, this to insure the bike would not start moving.
+The first test of the forward motor was described in \ref{method:configuringVesc}. Summarized, it was performed by using the VESC Tool to run the motor at a fixed RPM. Later on, when the code to send UART commands via LabVIEW had been created, a fixed RPM was instead sent to the motor via one of these commands. Both of the tests mentioned above were performed when the bike was stationary and elevated into the air, this to insure the bike would not start moving. During these tests, the load on the motor was varied by pressing a foot against the back wheel of the bike with different pressures. The purpose of this was to ensure that the controller in the VESC worked as intended and the speed of the motor stayed constant during varying loads.
+
+\subsection{Testing the Basic Functionality of Steering Motor}
+
+To ensure that controller in the ESCON worked, meaning the speed of the forward motor followed the setpoint value, a test was performed in ESCON Studio. This test plotted the measured velocity of the motor, in comparison with the setpoint velocity, which was periodically changed.
+
+Another test of the forward motor was performed by running the existing LabVIEW code and adjusting the duty cycle of the motor using the slider on the front panel. During this test the bike's front wheel was suspended midair so it could rotate freely. After the balancing algorithm had been created and connected to control the steering motor, it was tested by leaning the bike and examining if the steering motor rotated in the same direction. This purpose of the latter test was to insure the duty cycle of the steering motor followed the changing roll rate of the bike.
+
+\subsection{Testing the Gyroscope}
+
+To test that the gyroscope measured the correct roll rate, the bike was leaned to a predetermined angle. The roll rate which was measured during the time of the leaning was then integrated to calculate an approximate angle (not accounting for drift in the gyro), which could be compared with the predetermined angle the bike was tilted to.
 
 \subsection{Testing the Balancing Algorithm}
 
@@ -173,7 +208,7 @@ The bike roller test made it possible to replicate the effects of going forwards
 
 \subsubsection{Unaided Test} \label{method:unaidedTest}
 
-To test the bike using an approach closer to a real world environment, a series of tests were performed outdoors in a flat and open area. This test made it possible to drive the bike forward, as well as allowing it to move sideways, mitigating the limit of the previous bike roller test. To prevent the bike from falling and potentially being damaged, two people ran alongside the bike ready to catch in the case it would fall.
+To test the bike using an approach closer to a real world environment, a series of tests were performed outdoors in a flat and open area. This test made it possible to drive the bike forward, as well as allowing it to move sideways, mitigating the limitation of the previous bike roller test. To prevent the bike from falling and potentially being damaged, two people ran alongside the bike ready to catch in the case it would fall.
 
 For the purpose of being able to subsequently analyze the bike's behavior, the tests where both filmed and recorded using the logging system presented in \ref{method:logging}. Multiple tests were made with different values for the PID gains, to see how changing these values would affect the bikes performance. 
 
@@ -184,7 +219,3 @@ The data which was chosen to be recorded, logged and plotted with MATLAB include
 While not being apart of the project's aim in itself, the performance of the program is of interest. This is because the bike's balancing could potentially be impacted if parts of the program takes too long to run. To be able to measure the performance, the time to run one iteration of each loop in the LabVIEW program was recorded. These times are then added together to get a total loop time for the program. The members of the previous project group have done a more in depth examination of this performance, which means that the values which are retrieved during the current testing can be compared with those values.
 
 It should be noted that because a while-loop had to be used for the forward motor control, the time it takes to run cannot be measured. However, since a delay of one second exists in the loop, this is the loop time unless the other code in the loop takes longer to compute (which it does not). Additionally, the loop time of the forward motor control does not matter in this stage of the project, since the speed of the motor will be kept constant.
-
-\subsection{Test Protocol}
-
-To simplify the process of replicating the tests, a testing protocol was created. All of the tests which had been previously performed which also were seen as reasonable to replicate were added. Some suggestions for tests which could help calibrate the balancing algorithm for either the red bike or other future versions were also added. The testing protocol includes descriptions of the tests, the desired results and eventual comments. The protocol can be found in appendix \ref{testingProtocol}.

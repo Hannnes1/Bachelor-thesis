@@ -28,6 +28,10 @@ The MyRIO-1900 is a device that combines multiple components such as an ARM proc
 \section{ESCON Motor Controller}
 The ability to steer the front wheel of the bike is made possible by a the so called steering motor. The motor controller for the steering motor is an ESCON 50/5 designed by Maxon. This motor controller is a "PWM servo controller", which means it controls motors using Pulse Width Modulation (PWM). The PWM duty cycle range of the controller, meaning the range between which values the duty cycle can be varied, is 10\% to 90\% \cite{Maxon2021ESCONReference}.
 
+\subsection{ESCON Studio}
+
+The ESCON motor controller has an accompanying graphical user interface called ESCON Studio which features the ability to configure the controller's parameters \cite{ESCON2014ESCONOverview}. These parameters can for example change the motor's maximum angular velocity or its acceleration. ESCON Studio also allows for the parameter configurations to be downloaded and transferred between different controllers. The software has other features, for example a diagnostic tool which can measure how the motor's speed follows a certain setpoint value.
+
 \section{Steering Motor Encoder} \label{theory:encoder}
 To measure the position of the steering motor, or how far the front wheel has been rotated, an encoder of the model HEDS-5540\#A11 is used. The encoder translates rotational motion into a digital signal by using a codewheel that interrupts a light beam when it spins \cite{AvagoTechnologies2014HEDM-55xx/560xHEDS-55xx/56xx}. The encoder outputs a waveform signal with a resolution of 500 counts per revolution.
 
